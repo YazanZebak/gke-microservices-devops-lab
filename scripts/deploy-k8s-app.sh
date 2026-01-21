@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-source "$(dirname "$0")/config.sh"
+source "$(dirname "$0")/config-gke-cluster.sh"
 
 # Connect to GKE Cluster
 connect_cluster

@@ -1,12 +1,23 @@
 #!/bin/bash
 set -e
 
-# Global Variables
-export PROJECT_ID="project-caf6a8f5-fd1c-496d-8d2"
-export REGION="europe-west9"  # Paris
+# Project & Region
+export PROJECT_ID="fresh-argon-478111-i0"
+export REGION="europe-west9" # Paris
+export ZONE="europe-west9-a"
 
-# GKE Cluster Name
+# GKE Cluster
 export CLUSTER_NAME="online-boutique"
+export RELEASE_CHANNEL="regular"
+
+# Node Pool
+export NUM_NODES=4
+export MACHINE_TYPE="e2-standard-2"
+export DISK_SIZE=30
+
+# Network & Security
+export ENABLE_IP_ALIAS=true
+export ENABLE_SHIELDED_NODES=true
 
 # Enable Required Services
 enable_services() {
