@@ -24,8 +24,8 @@ graph TD
     B --> C[Pod: Email Service]
     B --> D[Pod: Cart Service]
     B --> E[Other Pods]
-    A --> F[External Load Generator (planned)]
-    A --> G[Monitoring (planned)]
+    A --> F[External Load Generator - planned]
+    A --> G[Monitoring - planned]
 ```
 
 **Notes:**
