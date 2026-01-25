@@ -43,8 +43,7 @@ To avoid unnecessary costs, clean up and delete all resources after finishing yo
 
 Run the deployment script:
 
-```bash
-scripts/deploy-k8s-app.sh
-```
+`deploy-k8s-app.sh`
+
 This script deploys the Online Boutique application on GKE.
 

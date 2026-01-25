@@ -11,7 +11,7 @@ export CLUSTER_NAME="online-boutique"
 export RELEASE_CHANNEL="regular"
 
 # Node Pool
-export NUM_NODES=4
+export NUM_NODES=2
 export MACHINE_TYPE="e2-standard-2"
 export DISK_SIZE=30
 

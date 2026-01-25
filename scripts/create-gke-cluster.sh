@@ -19,3 +19,4 @@ gcloud container clusters create "${CLUSTER_NAME}" \
   $( [ "$ENABLE_SHIELDED_NODES" = true ] && echo "--shielded-secure-boot --shielded-integrity-monitoring" )
 
 echo "GKE Cluster setup complete."
+connect_cluster

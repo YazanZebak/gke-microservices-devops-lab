@@ -7,7 +7,7 @@ connect_cluster
 
 # Deploy Application
 echo "Deploying Kubernetes manifests..."
-kubectl apply -f ./infrastructure/kubernetes/kubernetes-manifests.yaml
+kubectl apply -f ./microservices-demo/kubernetes-manifests/
 
 # Wait for pods to be ready
 echo "Waiting for pods to be ready..."

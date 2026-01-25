@@ -1,41 +1,79 @@
-## 1. Environment Configuration
+# GKE Cluster Design and Deployment
 
-All environment variables are centralized in a single configuration file.
+## 1. Cluster Design
+
+**Overview:**
+
+* **Cluster Type:** Standard GKE, regional multi-zone
+* **Node Pool:** Single pool for main workloads
+
+  * 2 nodes, `e2-standard-2` machines
+  * 30 GB disk per node
+* **Networking:** VPC-native (`--enable-ip-alias`)
+* **Security:** Shielded nodes enabled
+* **Purpose:** Runs Online Boutique microservices with Kustomize-managed CPU requests/limits
+* **Future Additions:** Monitoring (Prometheus/Grafana), canary releases, and external load generator will be added later
+
+---
+
+**Architecture Diagram:**
+
+```mermaid
+graph TD
+    A[GKE Cluster: online-boutique] --> B[Node Pool: 2 Nodes]
+    B --> C[Pod: Email Service]
+    B --> D[Pod: Cart Service]
+    B --> E[Other Pods]
+    A --> F[External Load Generator (planned)]
+    A --> G[Monitoring (planned)]
+```
+
+**Notes:**
+
+* All services communicate internally within the cluster.
+* The external load generator and monitoring components are planned but not yet deployed.
+* This design reflects the current setup that can be safely deployed within project quota limits.
+
+## 2. Environment Configuration
+
+All environment variables are centralized in a single configuration file for reproducibility:
 
 ```bash
 ./scripts/config-gke-cluster.sh
 ```
 
-This file defines shared variables such as project ID, region, cluster name, and defaults used by all scripts.
+This file defines shared variables including project ID, region, cluster name, node settings, and feature flags. Centralization avoids duplication, reduces errors, and makes environment changes explicit and auditable.
 
 ---
 
-## 2. Cluster Creation
+## 3. Cluster Creation
 
-Cluster creation, including enabling required GCP services, is handled by a dedicated script.
+Cluster creation is automated with:
 
 ```bash
 ./scripts/create-gke-cluster.sh
 ```
 
-The cluster is created using explicit flags for versioning, networking, security, and resource sizing.
+The script handles enabling required GCP services and creating the cluster with production-like settings suitable for experimentation. Flags include versioning, networking, security, and resource sizing.
+
+**Execution order:** Run `config-gke-cluster.sh` first, then `create-gke-cluster.sh`.
 
 ---
 
-## 3. Key GKE Flags Used
+## 4. Key GKE Flags Used
 
-| Flag                              | Category   | Purpose                       |
-| --------------------------------- | ---------- | ----------------------------- |
-| `--release-channel`               | Cluster    | Controls Kubernetes upgrades  |
-| `--node-locations`                | Cluster    | Multi-zone node distribution  |
-| `--enable-ip-alias`               | Networking | Enables VPC-native networking |
-| `--shielded-secure-boot`          | Security   | Secure node boot              |
-| `--shielded-integrity-monitoring` | Security   | Node OS integrity checks      |
-| `--disk-size`                     | Resources  | Controls node disk allocation |
+| Flag                              | Category   | Purpose                                           |
+| --------------------------------- | ---------- | ------------------------------------------------- |
+| `--release-channel`               | Cluster    | Automatic Kubernetes upgrades via release channel |
+| `--node-locations`                | Cluster    | Multi-zone distribution for high availability     |
+| `--enable-ip-alias`               | Networking | VPC-native pod IPs for scalability and clarity    |
+| `--shielded-secure-boot`          | Security   | Ensures only signed OS components run             |
+| `--shielded-integrity-monitoring` | Security   | Detects OS-level tampering                        |
+| `--disk-size`                     | Resources  | Aligns node storage with workload needs           |
 
 ---
 
-## 4. Deployment
+## 5. Deployment
 
 The application is deployed using Kubernetes manifests from the official repository:
 
@@ -43,109 +81,76 @@ The application is deployed using Kubernetes manifests from the official reposit
 https://github.com/GoogleCloudPlatform/microservices-demo
 ```
 
-All services communicate internally within the cluster. No direct GCP API access is required by workloads.
+Deployment script:
 
 ```bash
 ./scripts/deploy-k8s-app.sh
 ```
 
-Deploy the Online Boutique application on GKE.
+All services communicate internally within the cluster. No direct GCP API access is required by workloads.
 
 ---
 
-## 5. Architecture & Design Decisions
+## 6. Architecture & Design Decisions
 
-This section explains the rationale behind each major decision and clarifies the underlying GKE and GCP concepts.
+### 6.1 Centralized Configuration
 
-### 5.1 Centralized Configuration
+* **Decision:** Use a single config file.
+* **Benefit:** Reproducible scripts, reduced duplication, auditable changes.
 
-**Decision**: All variables are defined in `config-gke-cluster.sh`.
+### 6.2 Region vs Zone Separation
 
-**Explanation**:
-Centralizing configuration avoids duplication, reduces errors between scripts, and mirrors real-world infrastructure practices where configuration is externalized. It also improves reproducibility and makes environment changes explicit and auditable.
+* **Decision:** Explicitly configure regions and zones.
+* **Benefit:** Avoids subtle errors, aligns with GKE regional cluster requirements.
 
----
+### 6.3 Regional (Multi-Zone) Cluster
 
-### 5.2 Region vs Zone Separation
+* **Decision:** Nodes distributed across multiple zones.
+* **Benefit:** Improves fault tolerance and control plane redundancy.
 
-**Decision**: Regions and zones are explicitly separated.
+### 6.4 VPC-Native Networking
 
-**Explanation**:
-A region is a geographical area (e.g. `europe-west1`), while a zone is a specific data center within that region (e.g. `europe-west1-b`). GKE regional clusters require region-level configuration; mixing the two leads to common but subtle errors. Explicit separation improves correctness and clarity.
+* **Decision:** Enable `--enable-ip-alias`.
+* **Benefit:** Pods receive VPC subnet IPs, improving scalability, routing, and compatibility with advanced GKE features.
 
----
+### 6.5 Virtual Private Cloud (VPC)
 
-### 5.3 Regional (Multi-Zone) Cluster
+* **Decision:** Use the default VPC.
+* **Benefit:** Simplifies setup while retaining production-like networking primitives.
 
-**Decision**: Use a regional GKE cluster.
+### 6.6 Shielded Nodes
 
-**Explanation**:
-Regional clusters distribute nodes across multiple zones and replicate the control plane. This improves fault tolerance and availability without additional application complexity. It reflects standard production GKE architecture rather than single-zone experimentation.
+* **Decision:** Enable Secure Boot and integrity monitoring.
+* **Benefit:** Baseline security with minimal operational overhead.
 
----
+### 6.7 Kubernetes Version Management
 
-### 5.4 VPC-Native Networking
+* **Decision:** Use release channel instead of hard pinning versions.
+* **Benefit:** Controlled, automatic upgrades avoid deprecated versions and cluster creation failures.
 
-**Decision**: Enable VPC-native networking using `--enable-ip-alias`.
+### 6.8 Disk Size and Quota Awareness
 
-**Explanation**:
-With VPC-native networking, pods receive IP addresses from the VPC subnet instead of an overlay network. This improves scalability, simplifies routing, and is required for many advanced GKE features. It is the recommended and default model for modern GKE clusters.
+* **Decision:** Reduce node disk size (`--disk-size`).
+* **Benefit:** Avoid exceeding regional SSD quotas while aligning resources with workload needs.
 
----
+### 6.9 Workload Identity
 
-### 5.5 Virtual Private Cloud (VPC)
-
-**Decision**: Use the default VPC (no custom VPC created).
-
-**Explanation**:
-A VPC is a logically isolated network that defines IP ranges, subnets, routing, and firewall rules. All GKE clusters run inside a VPC. Using the default VPC keeps the setup simple while still relying on the same networking primitives used in production.
-
----
-
-### 5.6 Shielded Nodes
-
-**Decision**: Enable Shielded GKE nodes.
-
-**Explanation**:
-Shielded nodes provide Secure Boot and integrity monitoring. Secure Boot ensures only signed components run at startup, while integrity monitoring detects OS-level tampering. These features improve baseline security with minimal operational overhead.
+* **Decision:** Skip enabling Workload Identity.
+* **Benefit:** Simplifies setup; not needed because workloads do not require GCP API access.
 
 ---
 
-### 5.7 Kubernetes Version Management
+## 7. Tradeoff Summary
 
-**Decision**: Use the GKE release channel instead of hard pinning a specific patch version.
-
-**Explanation**:
-GKE supports only a limited set of Kubernetes versions that change over time. Hard pinning deprecated versions causes cluster creation failures. Using the release channel provides controlled, automatic upgrades while avoiding lifecycle-related breakage.
-
----
-
-### 5.8 Disk Size and Quota Awareness
-
-**Decision**: Explicitly reduce node disk size using `--disk-size`.
-
-**Explanation**:
-Regional clusters replicate node pools across multiple zones. By default, each node allocates 100 GB of SSD storage. This can quickly exceed regional SSD quotas. Reducing disk size aligns resource allocation with actual workload needs and avoids unnecessary quota requests.
+| Decision                   | Benefit                 | Tradeoff                       |
+| -------------------------- | ----------------------- | ------------------------------ |
+| Centralized config         | Reproducibility         | Initial structure overhead     |
+| Regional cluster           | High availability       | Higher resource usage          |
+| VPC-native networking      | Scalability and clarity | Requires networking knowledge  |
+| Shielded nodes             | Improved security       | Minimal extra configuration    |
+| Release channel            | Lifecycle safety        | Less strict version control    |
+| Reduced disk size          | Quota compliance        | Less storage headroom per node |
+| Skipping Workload Identity | Simplicity              | Reduced IAM granularity        |
 
 ---
 
-### 5.9 Workload Identity (Documented but Skipped)
-
-**Decision**: Do not enable Workload Identity.
-
-**Explanation**:
-Workload Identity maps Kubernetes Service Accounts to Google Service Accounts, enabling secure access to GCP APIs without static credentials. The microservices-demo does not require GCP API access, and enabling Workload Identity would add significant IAM configuration overhead per service. The workload pool identifier (e.g. `${PROJECT_ID}.svc.id.goog`) is safe to publish and does not grant access by itself.
-
----
-
-## 6. Tradeoff Summary
-
-| Decision                   | Benefit                 | Tradeoff                      |
-| -------------------------- | ----------------------- | ----------------------------- |
-| Centralized config         | Reproducibility         | Initial structure overhead    |
-| Regional cluster           | High availability       | Higher resource usage         |
-| VPC-native networking      | Scalability and clarity | Requires networking knowledge |
-| Shielded nodes             | Improved security       | Minimal extra configuration   |
-| Release channel            | Lifecycle safety        | Less strict version control   |
-| Reduced disk size          | Quota compliance        | Less headroom per node        |
-| Skipping Workload Identity | Simplicity              | Reduced IAM granularity       |
