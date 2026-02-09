@@ -2,9 +2,9 @@
 set -e
 
 # Project & Region
-export PROJECT_ID="fresh-argon-478111-i0"
-export REGION="europe-west9" # Paris
-export ZONE="europe-west9-a"
+export PROJECT_ID="project-65307ab8-ddea-48bf-b28"
+export REGION="europe-west1" # Brussels
+export ZONE="europe-west1-b"
 
 # GKE Cluster
 export CLUSTER_NAME="online-boutique"
