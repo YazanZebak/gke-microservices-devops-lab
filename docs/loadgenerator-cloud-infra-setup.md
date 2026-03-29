@@ -83,12 +83,12 @@ IP and the Locust configuration variables:
 
 ```ini
 [loadgenerator]
-34.89.168.241 ansible_user=debian ansible_ssh_private_key_file=~/.ssh/google_compute_engine
+${vm_ip} ansible_user=debian ansible_ssh_private_key_file=~/.ssh/google_compute_engine
 
 [loadgenerator:vars]
-frontend_addr=35.242.229.106
-locust_users=10
-locust_spawn_rate=1
+frontend_addr=${frontend_addr}
+locust_users=${users}
+locust_spawn_rate=${spawn_rate}
 ```
 
 This means there is no manual copy-pasting of IPs between tools. Terraform knows

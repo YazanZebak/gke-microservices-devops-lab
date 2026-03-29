@@ -1,0 +1,4 @@
+# Ansible generated
+ansible/loadgenerator/inventory.ini
+ansible/monitoring/inventory.ini
+**/inventory.ini
