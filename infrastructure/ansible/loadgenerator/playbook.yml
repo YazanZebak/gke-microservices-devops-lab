@@ -1,0 +1,81 @@
+---
+- name: Deploy load generator
+  hosts: loadgenerator
+  become: true
+
+  tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - python3-pip
+        state: present
+        update_cache: true
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: true
+
+    - name: Start and enable Docker
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Create load generator directory
+      file:
+        path: /opt/loadgenerator
+        state: directory
+        mode: "0755"
+
+    - name: Copy Dockerfile
+      copy:
+        src: "{{ playbook_dir }}/../../../microservices-demo/src/loadgenerator/Dockerfile"
+        dest: /opt/loadgenerator/Dockerfile
+
+    - name: Copy locustfile.py
+      copy:
+        src: "{{ playbook_dir }}/../../../microservices-demo/src/loadgenerator/locustfile.py"
+        dest: /opt/loadgenerator/locustfile.py
+
+    - name: Copy requirements.txt
+      copy:
+        src: "{{ playbook_dir }}/../../../microservices-demo/src/loadgenerator/requirements.txt"
+        dest: /opt/loadgenerator/requirements.txt
+
+    - name: Build load generator Docker image
+      community.docker.docker_image:
+        name: loadgenerator
+        tag: local
+        build:
+          path: /opt/loadgenerator
+        source: build
+        force_source: true
+
+    - name: Run Locust container
+      community.docker.docker_container:
+        name: locust
+        image: loadgenerator:local
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "8089:8089"
+        env:
+          FRONTEND_ADDR: "{{ frontend_addr }}"
+          USERS: "{{ locust_users | string }}"
+          RATE: "{{ locust_spawn_rate | string }}"

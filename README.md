@@ -19,6 +19,8 @@ The demo application is available from its [GitHub repository](https://github.co
    - `gcloud` CLI
    - `kubectl`
    - `Docker`
+   - `terraform`
+   - `ansible`
 
 ## Design Decisions and Thinking Notes
 
@@ -56,42 +58,9 @@ This script deploys the Online Boutique application on GKE.
 
 ### 4. Local Load Generator (Manual)
 
-This section covers manually deploying the load generator on a local machine as
+This [section](https://github.com/YazanZebak/gke-microservices-devops-lab/blob/main/docs/loadgenerator-local-setup.md) covers manually deploying the load generator on a local machine as
 an intermediate step before automated cloud deployment.
 
-#### 1. Get the Frontend IP
-```bash
-./scripts/get-frontend-endpoint.sh
-```
+### 5. Cloud Load Generator (Automated)
 
-#### 2. Build the Load Generator Image
-```bash
-cd microservices-demo/src/loadgenerator
-docker build -t loadgenerator:local .
-```
-
-#### 3. Run the Load Generator
-```bash
-docker run --rm \
-  -e FRONTEND_ADDR=<frontend-ip> \
-  -e USERS=10 \
-  -e SPAWN_RATE=1 \
-  loadgenerator:local
-```
-
-> **Note:** Pass only the IP address in `FRONTEND_ADDR`, not a full URL.
-> The Dockerfile entrypoint already prepends `http://`, so passing
-> `http://<ip>` would result in a double scheme and all requests will
-> time out with 5000ms failures.
-
-#### 4. Observe Results
-
-Locust runs in headless mode and prints a live request/failure table to
-stdout. Successful output looks like:
-```
-GET  /                  10   0(0.00%) | 245  210  380  230 | 1.00  0.00
-GET  /product/...        8   0(0.00%) | 312  280  450  300 | 0.80  0.00
-```
-
-If all requests show 100% failures with ~5000ms response time, check that
-`FRONTEND_ADDR` does not include `http://`.
+This [section](https://github.com/YazanZebak/gke-microservices-devops-lab/blob/main/docs/loadgenerator-cloud-infra-setup.md) covers automatically deploying the load generator on a GCE VM using Terraform and Ansible.
