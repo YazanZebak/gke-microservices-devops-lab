@@ -35,7 +35,14 @@ cd gke-microservices-devops-lab
 
 ### 2. Environment Configuration
 
-Configure your GCP project ID, region, and cluster name in `config-gke-cluster.sh`, then execute `create-gke-cluster.sh` to create the GKE cluster.
+Configure the following variables in `config-gke-cluster.sh`:
+- `PROJECT_ID` — your GCP project ID
+- `REGION` — GCP region (e.g. `europe-west3`)
+- `ZONE` — single zone within the region (e.g. `europe-west3-a`)
+- `CLUSTER_NAME` — name for the GKE cluster
+
+`NODE_LOCATIONS` is automatically set to `ZONE` to ensure exactly 2 nodes are
+provisioned. Without this, a regional cluster creates `NUM_NODES` per zone.
 
 To avoid unnecessary costs, clean up and delete all resources after finishing your experiment using `delete-gke-cluster.sh`.
 
