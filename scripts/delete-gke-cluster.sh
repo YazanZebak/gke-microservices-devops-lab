@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-source "$(dirname "$0")/config-gke-cluster.sh"
+source "$(dirname "$0")/lib.sh"
 
 # Delete GKE Cluster
 echo "Deleting GKE Cluster..."

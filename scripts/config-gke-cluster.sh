@@ -18,15 +18,3 @@ export DISK_SIZE=30
 # Network & Security
 export ENABLE_IP_ALIAS=true
 export ENABLE_SHIELDED_NODES=true
-
-# Enable Required Services
-enable_services() {
-    echo "Enabling required services..."
-    gcloud services enable container.googleapis.com compute.googleapis.com  --project="${PROJECT_ID}"
-}
-
-# Connect to GKE Cluster
-connect_cluster() {
-    echo "Connecting to GKE Cluster..."
-    gcloud container clusters get-credentials ${CLUSTER_NAME} --region=${REGION} --project=${PROJECT_ID}
-}
