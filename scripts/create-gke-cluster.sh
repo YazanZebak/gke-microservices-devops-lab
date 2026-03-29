@@ -11,6 +11,7 @@ echo "Setting up GKE Cluster..."
 gcloud container clusters create "${CLUSTER_NAME}" \
   --project="${PROJECT_ID}" \
   --region="${REGION}" \
+  --node-locations="${NODE_LOCATIONS}" \
   --num-nodes="${NUM_NODES}" \
   --disk-size="${DISK_SIZE}" \
   --machine-type="${MACHINE_TYPE}" \

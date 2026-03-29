@@ -3,8 +3,9 @@ set -e
 
 # Project & Region
 export PROJECT_ID="project-65307ab8-ddea-48bf-b28"
-export REGION="europe-west1" # Brussels
-export ZONE="europe-west1-b"
+export REGION="europe-west3" 
+export ZONE="europe-west3-a"
+export NODE_LOCATIONS="${ZONE}"
 
 # GKE Cluster
 export CLUSTER_NAME="online-boutique"

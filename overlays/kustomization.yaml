@@ -2,6 +2,6 @@ resources:
   - ../microservices-demo/kustomize/base/
 
 patches:
+  - path: patches/adservice-patch.yaml
   - path: patches/cartservice-patch.yaml
-  - path: patches/emailservice-patch.yaml
   - path: patches/loadgenerator-patch.yaml
