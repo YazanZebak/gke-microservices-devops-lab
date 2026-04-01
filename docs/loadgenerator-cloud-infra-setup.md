@@ -136,8 +136,8 @@ locust_spawn_rate = 1
 ```bash
 cd infrastructure/terraform
 terraform init
-terraform plan
-terraform apply
+terraform plan -out=tfplan
+terraform apply tfplan
 ```
 
 ### 5. Install Ansible Docker collection

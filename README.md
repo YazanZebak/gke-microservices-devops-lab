@@ -18,13 +18,26 @@ The demo application is available from its [GitHub repository](https://github.co
 2. **Required Tools**:
    - `gcloud` CLI
    - `kubectl`
+   - `helm`
    - `Docker`
    - `terraform`
    - `ansible`
+   - `helm`
 
 ## Design Decisions and Thinking Notes
 
 Detailed design decisions and reasoning are documented in the [docs](https://github.com/YazanZebak/gke-microservices-devops-lab/tree/main/docs) folder.
+
+## Notes on Approach
+
+### Cluster provisioning: scripts vs Terraform
+
+The GKE cluster is provisioned using `gcloud` scripts (`scripts/create-gke-cluster.sh`). This was a deliberate choice to try both approaches across the project:
+
+- **gcloud scripts** for the GKE cluster — simpler for a configuration that never changes after creation
+- **Terraform** for the load generator VM — better fit since the VM is created and destroyed repeatedly across multiple test runs
+
+In a production environment, Terraform would be the standard choice for both, as it provides state tracking, drift detection, and reviewable `terraform plan` output before any change is applied.
 
 ## Setup Instructions
 
@@ -48,7 +61,7 @@ provisioned. Without this, a regional cluster creates `NUM_NODES` per zone.
 
 To avoid unnecessary costs, clean up and delete all resources after finishing your experiment using `delete-gke-cluster.sh`.
 
-### 3. Deploy the  Application
+### 3. Deploy the Application
 
 Run the deployment script:
 
@@ -64,3 +77,7 @@ an intermediate step before automated cloud deployment.
 ### 5. Cloud Load Generator (Automated)
 
 This [section](https://github.com/YazanZebak/gke-microservices-devops-lab/blob/main/docs/loadgenerator-cloud-infra-setup.md) covers automatically deploying the load generator on a GCE VM using Terraform and Ansible.
+
+### 6. Monitoring
+
+Prometheus and Grafana are deployed inside the cluster using the kube-prometheus-stack Helm chart. See [docs/monitoring.md](docs/monitoring.md) for design decisions and details.

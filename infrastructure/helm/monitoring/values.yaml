@@ -1,0 +1,28 @@
+grafana:
+  adminPassword: "admin"   # change before any public-facing deployment
+
+  service:
+    type: LoadBalancer
+
+  # Pre-provisioned dashboards for nodes and pods
+  defaultDashboardsEnabled: true
+
+prometheus:
+  prometheusSpec:
+    # No persistent storage — ephemeral is fine for this lab
+    storageSpec: {}  # empty = no persistent disk
+
+    scrapeInterval: "15s" # how often Prometheus polls exporters
+
+    # Scrape ServiceMonitors and PodMonitors from all namespaces
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+alertmanager:
+  enabled: false  
+
+nodeExporter:
+  enabled: true    # DaemonSet — node-level CPU, memory, disk, network
+
+kubeStateMetrics:
+  enabled: true    # pod/deployment/replicaset-level metrics
