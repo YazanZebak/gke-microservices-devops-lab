@@ -43,6 +43,12 @@
         state: directory
         mode: "0755"
 
+    - name: Create results directory
+      file:
+        path: /opt/locust-results
+        state: directory
+        mode: "0755"
+
     - name: Copy Dockerfile
       copy:
         src: "{{ playbook_dir }}/../../../microservices-demo/src/loadgenerator/Dockerfile"
@@ -75,6 +81,16 @@
         restart_policy: unless-stopped
         ports:
           - "8089:8089"
+        volumes:
+          - "/opt/locust-results:/results"
+        entrypoint:
+          - locust
+          - "--host=http://{{ frontend_addr }}"
+          - "--users={{ locust_users }}"
+          - "--spawn-rate={{ locust_spawn_rate }}"
+          - "--csv=/results/locust"
+          - "--csv-full-history"
+          - "--headless"
         env:
           FRONTEND_ADDR: "{{ frontend_addr }}"
           USERS: "{{ locust_users | string }}"
