@@ -84,6 +84,8 @@ scp -i ~/.ssh/google_compute_engine \
 
 ![Latency vs Load](charts/latency_vs_load.png)
 
+![Throughput vs Load](charts/throughput_vs_load.png)
+
 ### Per-Endpoint p95 Latency
 
 | Endpoint            | 10 users | 50 users | 100 users | 200 users |
@@ -180,5 +182,3 @@ infrastructure-level view that explains the Locust results:
 
 The two data sources together tell the complete story: Locust shows _what_ the
 client experiences, Grafana shows _why_ at the infrastructure level.
-
-![Throughput vs Load](charts/throughput_vs_load.png)
