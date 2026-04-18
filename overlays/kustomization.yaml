@@ -1,7 +1,11 @@
 resources:
   - ../microservices-demo/kustomize/base/
+  - productcatalogservice-v2.yaml
+  - istio/destinationrule.yaml
+  - istio/virtualservice.yaml
 
 patches:
   - path: patches/adservice-patch.yaml
   - path: patches/cartservice-patch.yaml
   - path: patches/loadgenerator-patch.yaml
+  - path: patches/productcatalogservice-v1-patch.yaml
