@@ -22,7 +22,7 @@ The demo application is available from its [GitHub repository](https://github.co
    - `Docker`
    - `terraform`
    - `ansible`
-   - `helm`
+   - `istioctl`
 
 ## Design Decisions and Thinking Notes
 
@@ -80,4 +80,10 @@ This [section](https://github.com/YazanZebak/gke-microservices-devops-lab/blob/m
 
 ### 6. Monitoring
 
-Prometheus and Grafana are deployed inside the cluster using the kube-prometheus-stack Helm chart. See [docs/monitoring.md](docs/monitoring.md) for design decisions and details.
+Prometheus and Grafana are deployed inside the cluster using the `kube-prometheus-stack` Helm chart. See [docs/monitoring.md](docs/monitoring.md) for design decisions and details.
+
+### 7. Canary Release
+
+A canary release of `productcatalogservice` is implemented using Istio. Version `v2` runs alongside the stable `v1`, with 25% of traffic routed to `v2` and 75% to `v1`. Traffic splitting is handled by an Istio VirtualService and verified via sidecar metrics and Kiali.
+
+See [docs/canary-release.md](docs/canary-release.md) for the full methodology, YAML configuration, traffic verification data, and cutover procedure.
