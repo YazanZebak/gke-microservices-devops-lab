@@ -87,3 +87,28 @@ Prometheus and Grafana are deployed inside the cluster using the `kube-prometheu
 A canary release of `productcatalogservice` is implemented using Istio. Version `v2` runs alongside the stable `v1`, with 25% of traffic routed to `v2` and 75% to `v1`. Traffic splitting is handled by an Istio VirtualService and verified via sidecar metrics and Kiali.
 
 See [docs/canary-release.md](docs/canary-release.md) for the full methodology, YAML configuration, traffic verification data, and cutover procedure.
+
+## Deployment and Teardown Order
+
+### Creating (run in this order)
+
+```bash
+./scripts/create-gke-cluster.sh       # 1. GKE cluster
+./scripts/deploy-monitoring.sh        # 2. Prometheus + Grafana (must exist before Kiali)
+./scripts/deploy-k8s-app.sh           # 3. Application + Istio + Kiali
+./scripts/deploy-loadgenerator.sh     # 4. Load generator VM (optional)
+```
+
+### Destroying (run in this order)
+
+```bash
+./scripts/destroy-loadgenerator.sh    # 1. Load generator VM
+./scripts/destroy-monitoring.sh       # 2. Monitoring stack
+./scripts/delete-gke-cluster.sh       # 3. GKE cluster
+```
+
+Or destroy everything at once:
+
+```bash
+./scripts/teardown.sh
+```
