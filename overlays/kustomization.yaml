@@ -3,11 +3,19 @@ resources:
   - productcatalogservice-v2.yaml
   - istio/destinationrule.yaml
   - istio/virtualservice.yaml
+  - tracing/jaeger.yaml
+  - tracing/otelcol.yaml
   - hpa/cartservice-hpa.yaml
   - hpa/frontend-hpa.yaml
+
+components:
+  - ../microservices-demo/kustomize/components/google-cloud-operations
 
 patches:
   - path: patches/adservice-patch.yaml
   - path: patches/cartservice-patch.yaml
   - path: patches/loadgenerator-patch.yaml
   - path: patches/productcatalogservice-v1-patch.yaml
+  - path: patches/otelcol-config-patch.yaml
+  - path: patches/otel-env-patch.yaml
+

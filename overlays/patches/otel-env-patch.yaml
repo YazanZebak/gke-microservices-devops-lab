@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cartservice
+spec:
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol-jaeger:4317"
+            - name: COLLECTOR_SERVICE_ADDR   # ← add this
+              value: "otelcol-jaeger:4317"   # no http://, gRPC addr
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkoutservice
+spec:
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol-jaeger:4317"
+            - name: COLLECTOR_SERVICE_ADDR
+              value: "otelcol-jaeger:4317"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productcatalogservice
+spec:
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol-jaeger:4317"
+            - name: COLLECTOR_SERVICE_ADDR
+              value: "otelcol-jaeger:4317"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendationservice
+spec:
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol-jaeger:4317"
+            - name: COLLECTOR_SERVICE_ADDR
+              value: "otelcol-jaeger:4317"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shippingservice
+spec:
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol-jaeger:4317"
+            - name: COLLECTOR_SERVICE_ADDR
+              value: "otelcol-jaeger:4317"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currencyservice
+spec:
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol-jaeger:4317"
+            - name: COLLECTOR_SERVICE_ADDR
+              value: "otelcol-jaeger:4317"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emailservice
+spec:
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol-jaeger:4317"
+            - name: COLLECTOR_SERVICE_ADDR
+              value: "otelcol-jaeger:4317"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adservice
+spec:
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol-jaeger:4317"
+            - name: COLLECTOR_SERVICE_ADDR
+              value: "otelcol-jaeger:4317"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentservice
+spec:
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol-jaeger:4317"
+            - name: COLLECTOR_SERVICE_ADDR
+              value: "otelcol-jaeger:4317"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol-jaeger:4317"
+            - name: ENABLE_TRACING
+              value: "1"
