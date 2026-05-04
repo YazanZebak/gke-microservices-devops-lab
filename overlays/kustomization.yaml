@@ -3,6 +3,8 @@ resources:
   - productcatalogservice-v2.yaml
   - istio/destinationrule.yaml
   - istio/virtualservice.yaml
+  - hpa/cartservice-hpa.yaml
+  - hpa/frontend-hpa.yaml
 
 patches:
   - path: patches/adservice-patch.yaml

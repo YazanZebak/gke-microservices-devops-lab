@@ -67,7 +67,8 @@ Run the deployment script:
 
 `deploy-k8s-app.sh`
 
-This script deploys the Online Boutique application on GKE.
+This deploys the Online Boutique application and all autoscaling configuration
+(HPAs) in a single step via `kubectl apply -k overlays/`.
 
 ### 4. Local Load Generator (Manual)
 
@@ -87,6 +88,32 @@ Prometheus and Grafana are deployed inside the cluster using the `kube-prometheu
 A canary release of `productcatalogservice` is implemented using Istio. Version `v2` runs alongside the stable `v1`, with 25% of traffic routed to `v2` and 75% to `v1`. Traffic splitting is handled by an Istio VirtualService and verified via sidecar metrics and Kiali.
 
 See [docs/canary-release.md](docs/canary-release.md) for the full methodology, YAML configuration, traffic verification data, and cutover procedure.
+
+### 8. Autoscaling
+ 
+Performance evaluation identified `cartservice` as the bottleneck, saturating
+at ~150 concurrent users. The autoscaling strategy applies HPA to the two
+services most sensitive to load, with Cluster Autoscaler as a safety net for
+sustained burst traffic.
+ 
+**Enable Cluster Autoscaler** (once, after cluster creation):
+ 
+```bash
+scripts/enable-cluster-autoscaler.sh
+```
+ 
+This sets a min of 2 and max of 4 nodes on the default node pool. HPAs for
+`cartservice` and `frontend` are already included in the overlay and are applied
+automatically in step 3.
+ 
+**Verify HPA is active:**
+ 
+```bash
+kubectl get hpa
+```
+ 
+For the full strategy, threshold justifications, and performance evaluation
+plan, see [`docs/autoscaling-strategy.md`](docs/autoscaling-strategy.md).
 
 ## Deployment and Teardown Order
 
