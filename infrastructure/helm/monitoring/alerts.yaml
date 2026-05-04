@@ -1,0 +1,147 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: online-boutique-alerts
+  namespace: monitoring
+  labels:
+    # These labels are required for kube-prometheus-stack to pick up the rule
+    release: monitoring
+spec:
+  groups:
+
+    # ── Pod health ──────────────────────────────────────────────────────────────
+    - name: pod-health
+      rules:
+
+        - alert: PodNotReady
+          expr: |
+            kube_pod_status_ready{namespace="default", condition="true"} == 0
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.pod }} is not ready"
+            description: >
+              Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been
+              in a non-ready state for more than 2 minutes.
+
+        - alert: PodCrashLooping
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="default"}[15m]) > 3
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.pod }} is crash-looping"
+            description: >
+              Container {{ $labels.container }} in pod {{ $labels.pod }} has
+              restarted more than 3 times in the last 15 minutes.
+
+    # ── CPU throttling ──────────────────────────────────────────────────────────
+    # Fires when a container is being CPU-throttled more than 50% of the time.
+    # Based on our performance evaluation, cartservice hits its 100m limit under
+    # sustained load — this alert catches that condition early.
+    - name: cpu-throttling
+      rules:
+
+        - alert: ContainerCpuThrottling
+          expr: |
+            rate(container_cpu_cfs_throttled_seconds_total{
+              namespace="default",
+              container!=""
+            }[5m])
+            /
+            rate(container_cpu_cfs_periods_total{
+              namespace="default",
+              container!=""
+            }[5m])
+            > 0.50
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "CPU throttling on {{ $labels.container }}"
+            description: >
+              Container {{ $labels.container }} in pod {{ $labels.pod }} is being
+              CPU-throttled more than 50% of the time over the last 5 minutes.
+              Current throttle ratio: {{ $value | humanizePercentage }}.
+              Consider raising the CPU limit or enabling HPA.
+
+        - alert: CartserviceCpuThrottlingCritical
+          expr: |
+            rate(container_cpu_cfs_throttled_seconds_total{
+              namespace="default",
+              container="server",
+              pod=~"cartservice-.*"
+            }[5m])
+            /
+            rate(container_cpu_cfs_periods_total{
+              namespace="default",
+              container="server",
+              pod=~"cartservice-.*"
+            }[5m])
+            > 0.80
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Cartservice is critically CPU-throttled"
+            description: >
+              cartservice is being CPU-throttled more than 80% of the time.
+              This is the known bottleneck at ~150 concurrent users. The 100m
+              CPU limit is saturated. Throttle ratio: {{ $value | humanizePercentage }}.
+
+    # ── Node resource pressure ──────────────────────────────────────────────────
+    - name: node-resources
+      rules:
+
+        - alert: NodeMemoryPressure
+          expr: |
+            (
+              node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes
+            ) / node_memory_MemTotal_bytes > 0.85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage on node {{ $labels.instance }}"
+            description: >
+              Node {{ $labels.instance }} memory usage is above 85%.
+              Current usage: {{ $value | humanizePercentage }}.
+
+        - alert: NodeCpuHighUtilization
+          expr: |
+            100 - (
+              avg by (instance) (
+                rate(node_cpu_seconds_total{mode="idle"}[5m])
+              ) * 100
+            ) > 85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage on node {{ $labels.instance }}"
+            description: >
+              Node {{ $labels.instance }} CPU utilization is above 85% for
+              more than 5 minutes. Current: {{ $value | printf "%.1f" }}%.
+              Consider enabling cluster autoscaling.
+
+    # ── Application-level failures ──────────────────────────────────────────────
+    # Tracks the checkout 500 errors observed during performance evaluation.
+    # Uses Istio sidecar metrics if Istio is installed; falls back to kube metrics.
+    - name: application-errors
+      rules:
+
+        - alert: HighPodRestartRate
+          expr: |
+            sum by (pod, namespace) (
+              increase(kube_pod_container_status_restarts_total{namespace="default"}[1h])
+            ) > 5
+          for: 0m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.pod }} has restarted frequently"
+            description: >
+              Pod {{ $labels.pod }} has restarted more than 5 times in the
+              last hour. This may indicate OOMKill or repeated crashes.

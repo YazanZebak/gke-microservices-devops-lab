@@ -18,8 +18,31 @@ prometheus:
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
 
+    # Pick up PrometheusRule resources from all namespaces
+    ruleNamespaceSelector: {}
+    ruleSelectorNilUsesHelmValues: false
+
 alertmanager:
-  enabled: false  
+  enabled: true
+
+  config:
+    global:
+      resolve_timeout: 5m
+
+    route:
+      group_by: ["alertname", "namespace"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 1h
+      receiver: "null"   # default: swallow alerts (no external sink configured)
+      routes:
+        - matchers:
+            - name: severity
+              value: critical
+          receiver: "null"   # replace with slack/email/pagerduty in production
+
+    receivers:
+      - name: "null"   # no-op receiver — alerts are visible in the UI only
 
 nodeExporter:
   enabled: true    # DaemonSet — node-level CPU, memory, disk, network

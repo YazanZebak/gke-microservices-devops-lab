@@ -15,6 +15,12 @@ helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
   --values "$(dirname "$0")/../infrastructure/helm/monitoring/values.yaml" \
   --wait
 
+echo "Applying alert rules..."
+kubectl apply -f "$(dirname "$0")/../infrastructure/helm/monitoring/alerts.yaml"
+
+echo "Deploying Redis exporter..."
+kubectl apply -f "$(dirname "$0")/../infrastructure/helm/monitoring/redis-exporter.yaml"
+
 echo ""
 echo "Waiting for Grafana LoadBalancer IP..."
 TIMEOUT=120

@@ -1,0 +1,80 @@
+# Deploys redis_exporter as a standalone pod that connects to redis-cart
+# and exposes Redis metrics for Prometheus to scrape.
+#
+# Why standalone instead of a sidecar?
+# The base redis-cart manifest is treated as read-only (same rule as all base
+# manifests). A standalone deployment avoids modifying the base and keeps the
+# exporter lifecycle independent of redis-cart.
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-exporter
+  namespace: default
+  labels:
+    app: redis-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-exporter
+  template:
+    metadata:
+      labels:
+        app: redis-exporter
+    spec:
+      containers:
+        - name: redis-exporter
+          image: oliver006/redis_exporter:v1.62.0
+          ports:
+            - name: metrics
+              containerPort: 9121
+          env:
+            - name: REDIS_ADDR
+              value: "redis://redis-cart:6379"
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 50m
+              memory: 64Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-exporter
+  namespace: default
+  labels:
+    app: redis-exporter
+spec:
+  selector:
+    app: redis-exporter
+  ports:
+    - name: metrics
+      port: 9121
+      targetPort: metrics
+
+---
+# Tells Prometheus to scrape the redis-exporter Service.
+# serviceMonitorSelectorNilUsesHelmValues: false in values.yaml means
+# Prometheus picks up ServiceMonitors from all namespaces automatically.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: redis-exporter
+  namespace: monitoring
+  labels:
+    release: monitoring   # required for kube-prometheus-stack to pick this up
+spec:
+  namespaceSelector:
+    matchNames:
+      - default
+  selector:
+    matchLabels:
+      app: redis-exporter
+  endpoints:
+    - port: metrics
+      interval: 15s
